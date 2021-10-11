@@ -1,0 +1,7 @@
+target
+.DS_Store
+*.class
+*.jar
+# .idea/libraries
+# .idea/workspace.xml
+# /derby.log
