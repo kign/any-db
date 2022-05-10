@@ -75,4 +75,4 @@ if [[ "$OSTYPE" == "msys" ]]; then
   jsep=";"
   jar="$(cygpath -w $jar)"
 fi
-"$java" -cp $(cat $cp)$jsep$jar $class --default-config leo "$@"
+"$java" -cp $(cat $cp)$jsep$jar $class "$@"
