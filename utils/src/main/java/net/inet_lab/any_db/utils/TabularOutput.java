@@ -180,7 +180,8 @@ public class TabularOutput extends FormattedOutput {
             Iterator<Column> icol = columns.iterator();
             for (String v : row) {
                 Column col = icol.next ();
-                line.append(" " + col.format() + print(v,col.width,col.leftAlign?0:2) + col.reset() + " ");
+                String f = col.format();
+                line.append(" " + f + print(v,col.width,col.leftAlign?0:2) + (f.equals("")?"":col.reset()) + " ");
                 if (iCol < nCols - 1)
                     line.append("|");
                 iCol ++;
