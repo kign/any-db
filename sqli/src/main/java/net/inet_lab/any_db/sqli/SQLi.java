@@ -122,6 +122,11 @@ class SQLi {
             final List<String> loArgs = new ArrayList<>();
             dbConfig = getConfig(loArgs, null);
 
+            if (dbConfig == null) {
+                System.err.println("No database definition");
+                System.exit(1);
+            }
+
             if (!verifyConfig(dbConfig)) {
                 System.exit(1);
             }

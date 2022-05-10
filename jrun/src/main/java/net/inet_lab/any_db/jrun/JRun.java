@@ -206,6 +206,11 @@ public class JRun {
             final Map<String,String> vars = new HashMap<>();
             dbConfig = getConfig(loArgs, vars);
 
+            if (dbConfig == null) {
+                System.err.println("No database definition");
+                System.exit(1);
+            }
+
             if (!verifyConfig(dbConfig)) {
                 System.exit(1);
             }
