@@ -166,7 +166,7 @@ public class SQLConnector implements SQLConnection {
         }
         this.dry_run = dry_run;
         this.rmi_server = rmi_server;
-        this.signature = String.format("%s@%s:%s", c.user, c.host, c.database.replace('/', '_').toLowerCase());
+        this.signature = String.format("%s@%s-%s", c.user, c.host, c.database.replace('/', '_').toLowerCase());
         this.remoteService = _remoteService;
 
         if (this.remoteService != null)
