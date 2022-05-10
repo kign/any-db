@@ -11,7 +11,8 @@ import java.sql.ResultSet;
 import java.sql.SQLFeatureNotSupportedException;
 
 import javax.sql.rowset.CachedRowSet;
-import com.sun.rowset.CachedRowSetImpl;
+import javax.sql.rowset.RowSetProvider;
+
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.log4j.Logger;
 
@@ -142,7 +143,7 @@ public class JDBC_Connection implements JConnection {
             return stmt.executeQuery(sql);
         }
         else if (RS_CACHED.equals(rs_type)) {
-            CachedRowSet crs = new CachedRowSetImpl();
+            CachedRowSet crs = RowSetProvider.newFactory().createCachedRowSet();
 
             crs.setUsername(jdbcUser);
             crs.setPassword(jdbcPass);
