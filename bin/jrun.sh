@@ -39,12 +39,12 @@ if [ "$scriptname" = "jdbc-server" ]; then
     class=net.inet_lab.any_db.jdbcserver.$name
 fi
 cp=/tmp/${class}.cp
-if [ -d "$thisdir/../java/$lname" ]; then
-    proj="$thisdir/../java/$lname"
-elif [ -d "$thisdir/../java/$scriptname" ]; then
-    proj="$thisdir/../java/$scriptname"
+if [ -d "$thisdir/../$lname" ]; then
+    proj="$thisdir/../$lname"
+elif [ -d "$thisdir/../$scriptname" ]; then
+    proj="$thisdir/../$scriptname"
 else
-    echo "Cannot find project directory for $scriptname; tried $thisdir/../java/$lname and $thisdir/../java/$scriptname"
+    echo "Cannot find project directory for $scriptname; tried $thisdir/../$lname and $thisdir/../$scriptname"
     exit 1
 fi
 jar=$proj/target/$lname-1.0.jar
@@ -70,4 +70,9 @@ if [ -n "${JAVA_HOME+x}" ] && [ -x "$JAVA_HOME/bin/java" ]; then
 else
     java=java
 fi
-$java -cp $(cat $cp):$jar $class --default-config leo "$@"
+jsep=":"
+if [[ "$OSTYPE" == "msys" ]]; then
+  jsep=";"
+  jar="$(cygpath -w $jar)"
+fi
+"$java" -cp $(cat $cp)$jsep$jar $class --default-config leo "$@"
