@@ -79,7 +79,7 @@
             <scope>runtime</scope>
         </dependency>
         <dependency>
-            <groupId>jtds</groupId>
+            <groupId>net.sourceforge.jtds</groupId>
             <artifactId>jtds</artifactId>
             <scope>runtime</scope>
         </dependency>
