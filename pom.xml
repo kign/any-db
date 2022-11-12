@@ -10,20 +10,19 @@
     <version>1.0</version>
     <modules>
         <module>sqli</module>
-        <module>jrun</module>
-        <module>utils</module>
-<!--
         <module>jcol</module>
         <module>jdbc-server</module>
+        <module>jrun</module>
         <module>loadrun</module>
         <module>loadtodb</module>
--->
+        <module>utils</module>
     </modules>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
     <repositories>
@@ -46,15 +45,6 @@
                 <artifactId>aws-java-sdk</artifactId>
                 <version>1.11.571</version>
             </dependency>
-            <!--
-            <dependency>
-                <groupId>com.amazonaws</groupId>
-                <artifactId>aws-java-sdk-bom</artifactId>
-                <version>1.11.106</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            -->
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-csv</artifactId>

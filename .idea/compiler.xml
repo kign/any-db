@@ -7,10 +7,12 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="jrun" />
+        <module name="sqlremoteserver" />
         <module name="loadrun" />
         <module name="jdbc-server" />
         <module name="utils" />
         <module name="jcol" />
+        <module name="any-db-shared-utils" />
         <module name="sqli" />
         <module name="loadtodb" />
       </profile>
