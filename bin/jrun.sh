@@ -13,11 +13,22 @@ java_classes_alist=("jrun=JRun"
                     "jcol=JCol"
                     "loadtodb=LoadToDB"
                     "loadrun=LoadRun"
-	 	                "sqli=SQLi"
+	 	            "sqli=SQLi"
                     "jdbc-server=SQLRemoteServer")
 
 scriptname=$(basename $0)
 scriptname=${scriptname%.sh}
+scriptpath="${BASH_SOURCE[0]}"
+
+unlinked=$(readlink -e "$scriptpath" 2>/dev/null)
+if [[ $? != 0 ]]; then
+    unlinked=$(greadlink -e "$scriptpath" 2>/dev/null)
+    if [[ $? != 0 ]]; then
+        echo "If you're using MacOS, please run 'brew install coreutils'"
+        echo "Otherwise, make sure that either 'readlink' or 'greadlink' support option '-e'"
+        exit 1
+    fi
+fi
 
 for x in "${java_classes_alist[@]}"; do
     y=${x#$scriptname=}
@@ -32,7 +43,7 @@ if [ -z "${name+x}" ]; then
 fi
 
 lname=$(echo "$name" | tr '[:upper:]' '[:lower:]')
-thisdir=$(dirname $(readlink -e "${BASH_SOURCE[0]}"))
+thisdir=$(dirname "$unlinked")
 
 class=net.inet_lab.any_db.$lname.$name
 if [ "$scriptname" = "jdbc-server" ]; then
