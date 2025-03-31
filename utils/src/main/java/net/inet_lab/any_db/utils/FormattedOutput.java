@@ -11,7 +11,7 @@ public abstract class FormattedOutput {
 
     public static FormattedOutput newTabularOutput(PrintStream printStream, int termWidth, int minMaxWidth, String md_flavor) throws IOException {
         if ("jira".equals(md_flavor)) {
-            return new MarkupOutput(printStream, false);
+            return new MarkdownOutput(printStream, false);
         }
         else {
             return new TabularOutput(printStream, termWidth, minMaxWidth, md_flavor);
@@ -31,9 +31,9 @@ public abstract class FormattedOutput {
         return new TabbedOutput(printStream, tuplesOnly, separator);
     }
 
-    public static MarkupOutput newMarkupOutput(PrintStream printStream,
+    public static MarkdownOutput newMarkdownOutput(PrintStream printStream,
                                                boolean tuplesOnly) throws IOException {
-        return new MarkupOutput(printStream, tuplesOnly);
+        return new MarkdownOutput(printStream, tuplesOnly);
     }
 
     public void addColumn(String header, int width, boolean leftAlign) {

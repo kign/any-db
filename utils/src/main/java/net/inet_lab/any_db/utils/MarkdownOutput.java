@@ -9,15 +9,15 @@ import org.apache.log4j.Logger;
 
 import net.inet_lab.any_db.utils.FormattedOutput;
 
-public class MarkupOutput extends FormattedOutput {
-    private static final Logger log = Logger.getLogger(MarkupOutput.class.getName());
+public class MarkdownOutput extends FormattedOutput {
+    private static final Logger log = Logger.getLogger(MarkdownOutput.class.getName());
 
     private final List<String> columns;
     private boolean doneWithHeader;
     private final boolean tuplesOnly;
     private final PrintStream printStream;
 
-    public MarkupOutput(PrintStream printStream, boolean tuplesOnly) throws IOException {
+    public MarkdownOutput(PrintStream printStream, boolean tuplesOnly) throws IOException {
         this.tuplesOnly = tuplesOnly;
         this.printStream = printStream;
         columns = new ArrayList<>();

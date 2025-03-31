@@ -480,7 +480,7 @@ public class JRun {
                 out = FormattedOutput.newTabbedOutput(ps, args.tuples_only, '\t');
             }
             else if (args.outputFile.endsWith(".md")) {
-                out = FormattedOutput.newMarkupOutput(ps,args.tuples_only);
+                out = FormattedOutput.newMarkdownOutput(ps,args.tuples_only);
             }
             else {
                 log.error("Unrecognized format of output file, use one of: *.csv *.xlsx");
