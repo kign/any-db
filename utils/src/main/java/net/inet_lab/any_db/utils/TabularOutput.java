@@ -154,6 +154,7 @@ public class TabularOutput extends FormattedOutput {
         log.debug(b);
 
         String prefix = "github".equals(md_flavor)?"| ": "";
+        String suffix = "github".equals(md_flavor)?" |": "";
 
         StringBuilder line = new StringBuilder();
         int iCol = 0;
@@ -163,7 +164,7 @@ public class TabularOutput extends FormattedOutput {
                 line.append("|");
             iCol ++;
         }
-        printStream.println(prefix + line);
+        printStream.println(prefix + line + suffix);
         line.setLength(0);
         iCol = 0;
         for (Column col : columns) {
@@ -172,7 +173,7 @@ public class TabularOutput extends FormattedOutput {
                 line.append(("github".equals(md_flavor))?"|":"+");
             iCol ++;
         }
-        printStream.println(prefix + line);
+        printStream.println(prefix + line + suffix);
 
         for (List<String> row : rows) {
             line.setLength(0);
@@ -186,7 +187,7 @@ public class TabularOutput extends FormattedOutput {
                     line.append("|");
                 iCol ++;
             }
-            printStream.println(prefix + line);
+            printStream.println(prefix + line + suffix);
         }
 
         closed = true;
