@@ -112,7 +112,8 @@ public class SQLConnector implements SQLConnection {
                 break;
             default:
                 default_port = -1;
-                log.error("Driver " + driver + " is either misspelled or not supported yet");
+                log.error("Driver " + driver + " is either misspelled or not supported yet; " + 
+                     "supported drivers are redshift, mysql, presto, postgresql, snowflake, sqlserver");
                 System.exit(1);
         }
 
