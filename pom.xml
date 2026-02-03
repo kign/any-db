@@ -87,9 +87,9 @@
                 <version>8.0.20</version>
             </dependency>
             <dependency>
-                <groupId>postgresql</groupId>
+                <groupId>org.postgresql</groupId>
                 <artifactId>postgresql</artifactId>
-                <version>9.1-901-1.jdbc4</version>
+                <version>42.7.9</version>
             </dependency>
             <dependency>
                 <groupId>net.snowflake</groupId>
