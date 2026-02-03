@@ -22,6 +22,8 @@ Configuration file `~/.any-db` maps these names to common database connection in
 pro : driver=mysql,host=111.111.111.111,user=john,database=clients
 ```
 
+Valid drivers are in file `SQLConnector.java` . 
+
 Passwords are **not** saved in `~/.any-db`; for that, you can use `~/.pgpass` file already used by `psql`
 (Just use same exact format for non-PostgreSQL databases); this has an advantage that you can use all the
 tools provided here _and_ `psql`-derived tools while keeping all passwords in one place.
@@ -46,7 +48,7 @@ sqli.sh [custom database name]
 After you start the shell, command `\h` will print the full list of commands. We also support table/column name 
 completion to a limited degree.
 
-Full history is saved in directory `~/.sqli3` (one file per database name).
+Full history is saved in directory `~/.sqli3` (one file per database name). `log4j` logging goes to `~/sqli3.log`.
 
 ### jrun.sh
 
