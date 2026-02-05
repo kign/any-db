@@ -51,7 +51,7 @@ public abstract class ParsedArgsBaseDBAccess extends ParsedArgsBase {
 //            err += 1;
 //        }
         if (dbConfig.getDatabase() == null) {
-            System.err.println("Missing host (use -d,--database)");
+            System.err.println("Missing database (use -d,--database)");
             err += 1;
         }
         return err == 0;
