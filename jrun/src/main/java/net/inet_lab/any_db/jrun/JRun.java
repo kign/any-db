@@ -30,6 +30,8 @@ import net.inet_lab.any_db.utils.DBUserConfig;
 import net.inet_lab.any_db.utils.ParsedArgsBaseDBAccess;
 import net.inet_lab.any_db.utils.ScriptUtils;
 import net.inet_lab.any_db.utils.FormattedOutput;
+import net.inet_lab.any_db.utils.Misc.ParametersAccess;
+import net.inet_lab.any_db.utils.Misc.ParametersError;
 
 import static net.inet_lab.any_db.utils.Misc.*;
 
@@ -317,7 +319,7 @@ public class JRun {
             else {
                 String ofile = parsedCL.getOptionValue("output");
                 if (ofile != null) {
-                    log.error("Options -O and -o are incompatible.");
+                    log.error("Options -O/--output and -e/--extension are incompatible.");
                     System.exit(1);
                 }
                 outputFile = "FAKE." + extension;
@@ -329,7 +331,7 @@ public class JRun {
                     !outputFile.endsWith(".md") &&
                     !outputFile.endsWith(".tsv") &&
                     !outputFile.endsWith(".csv")) {
-                log.error("Unrecognized format of output file, use one of: *.csv *.xlsx *.txt *.tsv *.md");
+                log.error("Unrecognized extension of output file, use one of: *.csv *.xlsx *.txt *.tsv *.md");
                 System.exit(1);
             }
 
@@ -418,6 +420,10 @@ public class JRun {
 
         conn.setMarkdownFlavor(args.md_flavor);
 
+        if (!args.isUpdateQuery && args.query_a.size() > 1) {
+            log.warn(String.format("Query consists of %d parts; treating first %d as UPDATE (multi-select queries aren't supported)", args.query_a.size(), args.query_a.size()-1));
+        }
+
         int n_upd = args.isUpdateQuery ? args.query_a.size() : args.query_a.size() - 1;
         for (int ii = 0; ii < n_upd; ii++) {
             int nRes = 0;
@@ -483,7 +489,7 @@ public class JRun {
                 out = FormattedOutput.newMarkdownOutput(ps,args.tuples_only);
             }
             else {
-                log.error("Unrecognized format of output file, use one of: *.csv *.xlsx");
+                log.error("Unrecognized extension of output file, use one of: *.csv *.xlsx");
                 System.exit(1);
                 return;
             }
