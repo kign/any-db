@@ -16,10 +16,11 @@ import java.rmi.registry.Registry;
 import java.util.Properties;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class SQLConnector implements SQLConnection {
-    private static final Logger log = Logger.getLogger(SQLConnector.class.getName());
+    private static final Logger log = LogManager.getLogger(SQLConnector.class);
     static private final String PGPASS = ".pgpass";
 
     static public final String RS_DEFAULT = JDBC_Connection.RS_DEFAULT;
@@ -29,6 +30,8 @@ public class SQLConnector implements SQLConnection {
     static public final String RMI_YES = "YES";
     static public final String RMI_NO = "NO";
     static public final String RMI_DEFAULT = "DEFAULT";
+
+    static public final String GCLOUD_MYSQL = "gcloud-mysql";
 
     static public final String SQLPRN_NONE = "NONE";
     static public final String SQLPRN_STDOUT = "STDOUT";
@@ -87,16 +90,21 @@ public class SQLConnector implements SQLConnection {
         String x_query_group = null;
         switch (driver) {
             case "redshift":
-                //jdbcDriver = "com.amazon.redshift.jdbc41.Driver";
+                // com.amazon.redshift.Driver
                 default_port = 5439;
                 x_query_group = (options==null)? "default": options.getProperty("query_group", "default");
                 break;
             case "mysql":
-                //jdbcDriver = "com.mysql.jdbc.Driver";
+                // com.mysql.cj.jdbc.Driver
                 default_port = 3306;
                 break;
-            case "presto":
-                //jdbcDriver = "com.facebook.presto.jdbc.PrestoDriver";
+            case GCLOUD_MYSQL:
+                // MySQL in Google Cloud SQL, connected via IAM auth (no password); host is the instance
+                // connection name "project:region:instance", port is not used
+                default_port = 3306;
+                break;
+            case "trino":
+                // io.trino.jdbc.TrinoDriver ("presto" is accepted as an alias, see DBConfig)
                 default_port = 8080;
                 break;
             case "postgresql":
@@ -113,7 +121,7 @@ public class SQLConnector implements SQLConnection {
             default:
                 default_port = -1;
                 log.error("Driver " + driver + " is either misspelled or not supported yet; " + 
-                     "supported drivers are redshift, mysql, presto, postgresql, snowflake, sqlserver");
+                     "supported drivers are redshift, mysql, " + GCLOUD_MYSQL + ", trino (or presto), postgresql, snowflake, sqlserver");
                 System.exit(1);
         }
 
@@ -121,7 +129,9 @@ public class SQLConnector implements SQLConnection {
 
         query_group = x_query_group;
 
-        if (c.pass == null) {
+        final boolean passwordless = GCLOUD_MYSQL.equals(driver);
+
+        if (c.pass == null && !passwordless) {
             FileInputStream fileInputStream = new FileInputStream(System.getenv().get("HOME") + "/" + PGPASS);
             InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, "UTF-8");
             BufferedReader fh = new BufferedReader(inputStreamReader);
@@ -136,7 +146,7 @@ public class SQLConnector implements SQLConnection {
                     c.pass = comps[4];
             }
         }
-        if (c.pass == null)
+        if (c.pass == null && !passwordless)
             System.out.println("Password for " + user + "@" + c.host + ":" + c.port + "/" + c.database + " not found in ~/" + PGPASS);
 
 
@@ -198,9 +208,10 @@ public class SQLConnector implements SQLConnection {
         conn.initConn(false);
     }
 
+    // Callers use this to pick SQL dialect, so cloud variants report their underlying database
     @Override
     public String getDriver() {
-        return driver;
+        return GCLOUD_MYSQL.equals(driver) ? "mysql" : driver;
     }
 
     @Override

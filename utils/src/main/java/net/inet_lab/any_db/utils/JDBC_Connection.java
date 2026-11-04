@@ -14,10 +14,11 @@ import javax.sql.rowset.CachedRowSet;
 import javax.sql.rowset.RowSetProvider;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class JDBC_Connection implements JConnection {
-    private static final Logger log = Logger.getLogger(JDBC_Connection.class.getName());
+    private static final Logger log = LogManager.getLogger(JDBC_Connection.class);
 
     static public final String RS_DEFAULT = "DEFAULT";
     static public final String RS_CACHED = "CACHED";
@@ -45,7 +46,7 @@ public class JDBC_Connection implements JConnection {
         java.util.Enumeration<Driver> drivers =  DriverManager.getDrivers();
         while (drivers.hasMoreElements()) {
             Driver d = drivers.nextElement();
-            if (d.getClass().getName().equals("com.amazon.redshift.jdbc41.Driver")) {
+            if (d.getClass().getName().startsWith("com.amazon.redshift.")) {
                 try {
                     DriverManager.deregisterDriver(d);
                     DriverManager.registerDriver(d);
@@ -84,6 +85,23 @@ public class JDBC_Connection implements JConnection {
                 // https://stackoverflow.com/questions/50379839/connection-java-mysql-public-key-retrieval-is-not-allowed
                 x_jdbcURL = "jdbc:" + jdbcSchema + "://" + host + ":" + port + "/" + database + "?allowPublicKeyRetrieval=true&useSSL=false";
                 break;
+            case SQLConnector.GCLOUD_MYSQL:
+                // https://github.com/GoogleCloudPlatform/cloud-sql-jdbc-socket-factory/blob/main/docs/jdbc.md
+                // host is the instance connection name "project:region:instance"; credentials are
+                // Google Application Default Credentials, and user is the IAM email truncated at '@'
+                supportsCached = true;
+                x_jdbcURL = "jdbc:mysql:///" + database +
+                        "?socketFactory=com.google.cloud.sql.mysql.SocketFactory" +
+                        "&cloudSqlInstance=" + host +
+                        "&enableIamAuth=true" +
+                        // bill Cloud SQL Admin API calls to the instance's project
+                        "&cloudSqlAdminQuotaProject=" + host.split(":")[0] +
+                        // socket factory already provides TLS
+                        "&sslMode=DISABLED";
+                // ignored with IAM auth, but the driver rejects an empty password
+                if (pass == null)
+                    pass = "iam-auth";
+                break;
             case "snowflake":
                 supportsCached = false;
                 final String default_warehouse = "WHAM_ADHOC";
@@ -94,12 +112,21 @@ public class JDBC_Connection implements JConnection {
                 if (role != null)
                     x_jdbcURL += "&role=" + role;
                 // not sure if this needed, but it seems to help when we can't load Snowflake driver
-                jdbcDriver = "net.snowflake.client.jdbc.SnowflakeDriver";
+                jdbcDriver = "net.snowflake.client.api.driver.SnowflakeDriver";
                 break;
             case "sqlserver":
                 supportsCached = true;
-                x_jdbcURL = "jdbc:" + "jtds:" + jdbcSchema + "://" + host + ":" + port + "/" + database + ";selectMethod=cursor";
-                jdbcDriver = "net.sourceforge.jtds.jdbc.Driver";
+                // mssql-jdbc defaults to encrypt=true (with certificate validation);
+                // jTDS, which we used before, never encrypted, so keep that unless ssl is requested
+                x_jdbcURL = "jdbc:" + jdbcSchema + "://" + host + ":" + port + ";databaseName=" + database +
+                        ";selectMethod=cursor;encrypt=" + ssl;
+                break;
+            case "trino":
+                supportsCached = true;
+                // database is "catalog" or "catalog/schema"
+                x_jdbcURL = "jdbc:" + jdbcSchema + "://" + host + ":" + port + "/" + database;
+                if (ssl)
+                    x_jdbcURL += "?SSL=true";
                 break;
             default:
                 supportsCached = true;
@@ -135,7 +162,7 @@ public class JDBC_Connection implements JConnection {
     }
 
     public ResultSet executeQuery(String sql) throws SQLException {
-        if ("presto".equalsIgnoreCase(jdbcSchema) && sql.endsWith(";"))
+        if ("trino".equalsIgnoreCase(jdbcSchema) && sql.endsWith(";"))
             sql = sql.substring(0,sql.length() - 1);
 
         if (RS_DEFAULT.equals(rs_type)) {
@@ -191,7 +218,7 @@ public class JDBC_Connection implements JConnection {
 
     public int executeUpdate(String sql) throws SQLException {
         initConn(false);
-        if ("presto".equalsIgnoreCase(jdbcSchema) && sql.endsWith(";"))
+        if ("trino".equalsIgnoreCase(jdbcSchema) && sql.endsWith(";"))
             sql = sql.substring(0,sql.length() - 1);
         return stmt.executeUpdate(sql);
     }

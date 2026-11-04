@@ -14,8 +14,8 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 
-import com.google.common.collect.ImmutableMap;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import net.inet_lab.any_db.utils.SQLConnection;
 import net.inet_lab.any_db.utils.SQLConnector;
@@ -23,13 +23,13 @@ import net.inet_lab.any_db.utils.SQLConnector;
 import static net.inet_lab.any_db.utils.Misc.*;
 
 class SQLDict {
-    private static final Logger log = Logger.getLogger(SQLDict.class.getName());
+    private static final Logger log = LogManager.getLogger(SQLDict.class);
 
     private static final Map<String, String> colMapperSnowflake =
-            ImmutableMap.of("number(38,0)", "integer",
+            Map.of("number(38,0)", "integer",
                             "varchar(16777216)", "string");
-    private static final Map<String, String> colMapperPresto =
-            ImmutableMap.of("varchar", "string");
+    private static final Map<String, String> colMapperTrino =
+            Map.of("varchar", "string");
 
     private final SQLConnection conn;
 
@@ -90,7 +90,7 @@ class SQLDict {
                 schemas.add(schema);
             }
         }
-        else if ("presto".equals(driver)) {
+        else if ("trino".equals(driver)) {
             ResultSet res = conn.select("show schemas", SQLConnector.SQLPRN_LOG);
             Map<String, Integer> idx = getIndeces(res, "schema");
 
@@ -183,7 +183,7 @@ class SQLDict {
         }
         else if ("sqlserver".equals(driver) ||
                  "mysql".equals(driver) ||
-                 "presto".equals(driver)) {
+                 "trino".equals(driver)) {
             ResultSet res = conn.select(
                     String.format(
                             "select table_name, table_type from information_schema.tables where table_schema='%s'", schema),
@@ -208,7 +208,7 @@ class SQLDict {
             }
         }
         // this should no longer be necessary, above clause covers this use case
-        else if ("presto".equals(driver ) ||
+        else if ("trino".equals(driver) ||
                  "mysql".equals(driver) ) {
             ResultSet res = conn.select("show tables from " + schema, SQLConnector.SQLPRN_LOG);
             Map<String, Integer> idx = getIndeces(res, "table*");
@@ -311,7 +311,7 @@ class SQLDict {
                 cols.add(col);
             }
         }
-        else if ("presto".equals(driver)) {
+        else if ("trino".equals(driver)) {
             ResultSet res = conn.select("show columns from " + tname, SQLConnector.SQLPRN_LOG);
             Map<String, Integer> idx = getIndeces(res, "column", "type", "extra");
 
@@ -319,7 +319,7 @@ class SQLDict {
                 Column col = new Column();
                 col.name = getLowerCaseString(res, idx.get("column"));
                 String type = getLowerCaseString(res, idx.get("type"));
-                col.type = accessMap(colMapperPresto, type, type);
+                col.type = accessMap(colMapperTrino, type, type);
                 col.nullable = true;
                 col.more =  getLowerCaseString(res, idx.get("extra"));
 

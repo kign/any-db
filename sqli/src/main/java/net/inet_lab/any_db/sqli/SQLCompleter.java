@@ -15,7 +15,8 @@ import java.sql.SQLException;
 import java.rmi.RemoteException;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import org.jline.reader.Candidate;
 import org.jline.reader.Completer;
@@ -29,7 +30,7 @@ import static net.inet_lab.any_db.utils.Misc.*;
 // github.com/jline/jline3/blob/master/reader/src/main/java/org/jline/reader/impl/completer/FileNameCompleter.java
 
 public class SQLCompleter implements Completer {
-    private static final Logger log = Logger.getLogger(SQLCompleter.class.getName());
+    private static final Logger log = LogManager.getLogger(SQLCompleter.class);
 
     private final SQLConnection conn;
     private final SQLDict dict;

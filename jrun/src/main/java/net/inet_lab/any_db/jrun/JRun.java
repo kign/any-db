@@ -16,7 +16,8 @@ import java.sql.SQLException;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.HelpFormatter;
@@ -36,7 +37,7 @@ import net.inet_lab.any_db.utils.Misc.ParametersError;
 import static net.inet_lab.any_db.utils.Misc.*;
 
 public class JRun {
-    private static final Logger log = Logger.getLogger(JRun.class.getName());
+    private static final Logger log = LogManager.getLogger(JRun.class);
 
     private static ParsedArgs args;
 
@@ -78,6 +79,7 @@ public class JRun {
             }
             final String USAGE="jrun.sh [options] [" + selector + "] [variable=substitution] <query>";
 
+            @SuppressWarnings("deprecation") // the new org.apache.commons.cli.help.HelpFormatter changes --help layout
             HelpFormatter helper = new HelpFormatter();
 
             // https://commons.apache.org/proper/commons-cli/apidocs/index.html
@@ -85,117 +87,117 @@ public class JRun {
                     .addOption(Option.builder()
                             .longOpt("help")
                             .desc("Print this help")
-                            .build())
+                            .get())
                     .addOption(Option.builder("h")
                             .hasArg().argName("HOST")
                             .longOpt("host")
                             .desc("host name")
-                            .build())
+                            .get())
                     .addOption(Option.builder("p")
                             .hasArg().argName("PORT")
                             .longOpt("port")
                             .desc("port number")
-                            .build())
+                            .get())
                     .addOption(Option.builder("d")
                             .hasArg().argName("database")
                             .longOpt("database")
                             .desc("name of database")
-                            .build())
+                            .get())
                     .addOption(Option.builder("U")
                             .hasArg().argName("USER")
                             .longOpt("user")
                             .desc("user name (default = current user, " + loginUser + ")")
-                            .build())
+                            .get())
                     .addOption(Option.builder()
                             .hasArg().argName("DRIVER")
                             .longOpt("driver")
                             .desc("JDBC driver to use")
-                            .build())
+                            .get())
                     .addOption(Option.builder("t")
                             .longOpt("no-headers")
-                            .desc("Skip header row when writing to CVS file")
-                            .build())
+                            .desc("Skip header row when writing to CSV file")
+                            .get())
                     .addOption(Option.builder("u")
                             .longOpt("update")
                             .desc("Run as an 'update' query")
-                            .build())
+                            .get())
                     .addOption(Option.builder("O")
                             .hasArg().argName("FILE")
                             .longOpt("output")
                             .desc("Output file name")
-                            .build())
+                            .get())
                     .addOption(Option.builder("e")
                             .hasArg().argName("EXT")
                             .longOpt("extension")
                             .desc("Output file extension (will cause formatted output to STDOUT)")
-                            .build())
+                            .get())
                     .addOption(Option.builder()
                             .hasArg().argName("NULL VALUE")
                             .longOpt("null")
                             .desc("NULL value (default = NULL)")
-                            .build())
+                            .get())
                     .addOption(Option.builder("f")
                             .hasArg().argName("FORMAT")
                             .longOpt("format")
                             .desc("Column format (e.g. '1=bold,cyan 2=red')")
-                            .build())
+                            .get())
                     .addOption(Option.builder("m")
                             .hasArg().argName("MARKDOWN FLAVOUR")
                             .longOpt("markdown")
                             .desc("E.g. github, jira")
-                            .build())
+                            .get())
                     .addOption(Option.builder("q")
                             .hasArg().argName("QUERY_GROUP")
                             .longOpt("query_group")
                             .desc("Query group")
-                            .build())
+                            .get())
                     .addOption(Option.builder()
                             .longOpt("unescaped")
                             .desc("No escaping in CSV file generation; might not open in Excel correctly, but better for line by line comparison")
-                            .build())
+                            .get())
                     .addOption(Option.builder()
                             .longOpt("single")
                             .desc("Treat whole file as one large query, don't attempt to split")
-                            .build())
+                            .get())
                     .addOption(Option.builder()
                             .longOpt("nosub")
                             .desc("No paramater substitution")
-                            .build())
+                            .get())
                     .addOption(Option.builder()
                             .longOpt("rmi")
                             .desc("Force RMI use (always execute in server process)")
-                            .build())
+                            .get())
                     .addOption(Option.builder()
                             .longOpt("no-rmi")
                             .desc("Inhibit RMI use (never execute in server process)")
-                            .build())
+                            .get())
                     .addOption(Option.builder()
                             .longOpt("full-error")
                             .desc("Print full error message and Java stack on SQL exception")
-                            .build())
+                            .get())
                     .addOption(Option.builder()
                             .hasArg().argName("RS_TYPE")
                             .longOpt("rs-type")
                             .desc("Testing only; can be 'default', 'wrapper' or 'cached'")
-                            .build())
+                            .get())
                     .addOption(Option.builder("n")
                             .longOpt("dry-run")
                             .desc("Dry run mode (clusters should still be available)")
-                            .build())
+                            .get())
                     .addOption(Option.builder("o")
                             .hasArg().argName("SCHEMA")
                             .longOpt("schema")
                             .desc("use this value to replace /*{*/<schema>/*}*/")
-                            .build())
+                            .get())
                     .addOption(Option.builder("M")
                             .longOpt("admin")
                             .desc("Assume sysadmin role (snowflake)")
-                            .build())
+                            .get())
                     .addOption(Option.builder()
                             .hasArg().argName("CONFIG")
                             .longOpt("default-config")
                             .desc("Default config if one not specified as argument")
-                            .build());
+                            .get());
 
             parsedCL = parseCL(options, commandLine);
 
@@ -383,7 +385,7 @@ public class JRun {
 
             print_full_error = parsedCL.hasOption("full-error");
 
-            if (false) {
+            if (true) {
                 for (Map.Entry<Integer,String[]> e : colFormat.entrySet()) {
                     System.out.print(e.getKey() + ": ");
                     boolean frst=true;

@@ -7,23 +7,22 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 
-import com.amazonaws.AmazonClientException;
-import com.amazonaws.AmazonServiceException;
-import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.model.PutObjectRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.ListObjectsV2Request;
-import com.amazonaws.services.s3.model.ListObjectsV2Result;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.services.s3.AmazonS3ClientBuilder;
-import com.amazonaws.regions.Regions;
+import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
+import software.amazon.awssdk.awscore.exception.AwsServiceException;
+import software.amazon.awssdk.core.exception.SdkClientException;
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Request;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Object;
 
 public class AWSClient {
     private final String access_key;
     private final String secret_key;
-    private final AmazonS3 s3client;
+    private final S3Client s3client;
+
     public AWSClient() {
         Map<String, String> env = System.getenv();
 
@@ -33,11 +32,10 @@ public class AWSClient {
         if ((secret_key = env.get("AWS_SECRET_ACCESS_KEY")) == null)
             throw new RuntimeException("AWS_SECRET_ACCESS_KEY is not defined");
 
-        BasicAWSCredentials creds = new BasicAWSCredentials("access_key", "secret_key");
-        s3client = AmazonS3ClientBuilder.standard()
-                                        .withCredentials(new EnvironmentVariableCredentialsProvider())
-                                        .withRegion(Regions.US_EAST_1)
-                                        .build();
+        s3client = S3Client.builder()
+                           .credentialsProvider(EnvironmentVariableCredentialsProvider.create())
+                           .region(Region.US_EAST_1)
+                           .build();
     }
 
     public void put(String uploadFileName, String bucketName, String keyName) {
@@ -46,26 +44,11 @@ public class AWSClient {
             keyName += file.getName();
 
         try {
-            s3client.putObject(new PutObjectRequest(
-                    bucketName, keyName, file));
-
-        } catch (AmazonServiceException ase) {
-            System.out.println("Caught an AmazonServiceException, which " +
-                    "means your request made it " +
-                    "to Amazon S3, but was rejected with an error response" +
-                    " for some reason.");
-            System.out.println("Error Message:    " + ase.getMessage());
-            System.out.println("HTTP Status Code: " + ase.getStatusCode());
-            System.out.println("AWS Error Code:   " + ase.getErrorCode());
-            System.out.println("Error Type:       " + ase.getErrorType());
-            System.out.println("Request ID:       " + ase.getRequestId());
-        } catch (AmazonClientException ace) {
-            System.out.println("Caught an AmazonClientException, which " +
-                    "means the client encountered " +
-                    "an internal error while trying to " +
-                    "communicate with S3, " +
-                    "such as not being able to access the network.");
-            System.out.println("Error Message: " + ace.getMessage());
+            s3client.putObject(putRequest(bucketName, keyName), RequestBody.fromFile(file));
+        } catch (AwsServiceException ase) {
+            reportServiceException(ase);
+        } catch (SdkClientException ace) {
+            reportClientException(ace);
         }
     }
 
@@ -86,72 +69,70 @@ public class AWSClient {
 
     public void put(InputStream uploadStream, long contentLength, String bucketName, String keyName) {
         try {
-            ObjectMetadata objMeta = new ObjectMetadata ();
-            objMeta.setContentLength(contentLength);
-            s3client.putObject(new PutObjectRequest(bucketName, keyName, uploadStream, objMeta));
-
-        } catch (AmazonServiceException ase) {
-            System.out.println("Caught an AmazonServiceException, which " +
-                    "means your request made it " +
-                    "to Amazon S3, but was rejected with an error response" +
-                    " for some reason.");
-            System.out.println("Error Message:    " + ase.getMessage());
-            System.out.println("HTTP Status Code: " + ase.getStatusCode());
-            System.out.println("AWS Error Code:   " + ase.getErrorCode());
-            System.out.println("Error Type:       " + ase.getErrorType());
-            System.out.println("Request ID:       " + ase.getRequestId());
-        } catch (AmazonClientException ace) {
-            System.out.println("Caught an AmazonClientException, which " +
-                    "means the client encountered " +
-                    "an internal error while trying to " +
-                    "communicate with S3, " +
-                    "such as not being able to access the network.");
-            System.out.println("Error Message: " + ace.getMessage());
+            s3client.putObject(putRequest(bucketName, keyName), RequestBody.fromInputStream(uploadStream, contentLength));
+        } catch (AwsServiceException ase) {
+            reportServiceException(ase);
+        } catch (SdkClientException ace) {
+            reportClientException(ace);
         }
     }
 
-    public List<S3ObjectSummary> list(String bucketName, String prefix) throws IOException {
+    public List<S3Object> list(String bucketName, String prefix) throws IOException {
         try {
-            final ListObjectsV2Request req = new ListObjectsV2Request()
-                    .withBucketName(bucketName)
-                    .withPrefix(prefix);
-            ListObjectsV2Result result;
-            List<S3ObjectSummary> ret = new ArrayList<>();
+            ListObjectsV2Request.Builder req = ListObjectsV2Request.builder()
+                    .bucket(bucketName)
+                    .prefix(prefix);
+            ListObjectsV2Response result;
+            List<S3Object> ret = new ArrayList<>();
             int iter = 0;
             do {
                 iter ++;
-                result = s3client.listObjectsV2(req);
+                result = s3client.listObjectsV2(req.build());
 
-                ret.addAll(result.getObjectSummaries());
-                req.setContinuationToken(result.getNextContinuationToken());
+                ret.addAll(result.contents());
+                req.continuationToken(result.nextContinuationToken());
                 if (iter > 1000) {
                     System.out.println("Over " + iter + " iterations, exiting");
                     System.exit(1);
                 }
-            } while(result.isTruncated());
+            } while(Boolean.TRUE.equals(result.isTruncated()));
 
             return ret;
 
-        } catch (AmazonServiceException ase) {
-            System.out.println("Caught an AmazonServiceException, " +
-                    "which means your request made it " +
-                    "to Amazon S3, but was rejected with an error response " +
-                    "for some reason.");
-            System.out.println("Error Message:    " + ase.getMessage());
-            System.out.println("HTTP Status Code: " + ase.getStatusCode());
-            System.out.println("AWS Error Code:   " + ase.getErrorCode());
-            System.out.println("Error Type:       " + ase.getErrorType());
-            System.out.println("Request ID:       " + ase.getRequestId());
-        } catch (AmazonClientException ace) {
-            System.out.println("Caught an AmazonClientException, " +
-                    "which means the client encountered " +
-                    "an internal error while trying to communicate" +
-                    " with S3, " +
-                    "such as not being able to access the network.");
-            System.out.println("Error Message: " + ace.getMessage());
+        } catch (AwsServiceException ase) {
+            reportServiceException(ase);
+        } catch (SdkClientException ace) {
+            reportClientException(ace);
         }
 
         return null;
     }
 
+    private static PutObjectRequest putRequest(String bucketName, String keyName) {
+        return PutObjectRequest.builder()
+                .bucket(bucketName)
+                .key(keyName)
+                .build();
+    }
+
+    private static void reportServiceException(AwsServiceException ase) {
+        System.out.println("Caught an AwsServiceException, which " +
+                "means your request made it " +
+                "to Amazon S3, but was rejected with an error response" +
+                " for some reason.");
+        System.out.println("Error Message:    " + ase.getMessage());
+        System.out.println("HTTP Status Code: " + ase.statusCode());
+        if (ase.awsErrorDetails() != null)
+            System.out.println("AWS Error Code:   " + ase.awsErrorDetails().errorCode());
+        System.out.println("Request ID:       " + ase.requestId());
+    }
+
+    private static void reportClientException(SdkClientException ace) {
+        System.out.println("Caught an SdkClientException, which " +
+                "means the client encountered " +
+                "an internal error while trying to " +
+                "communicate with S3, " +
+                "such as not being able to access the network.");
+        System.out.println("Error Message: " + ace.getMessage());
+    }
 }

@@ -5,10 +5,11 @@ import java.util.Map;
 import java.util.Collection;
 
 import net.inet_lab.any_db.utils.SQLConnection;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 class SQLiContext {
-    private static final Logger log = Logger.getLogger(SQLi.class.getName());
+    private static final Logger log = LogManager.getLogger(SQLi.class);
 
     private final String schema;
     private String lastCheckedTable;
@@ -17,7 +18,7 @@ class SQLiContext {
 
     SQLiContext(SQLConnection conn) {
         switch (conn.getDriver()) {
-            case "presto":
+            case "trino":
                 schema = "default";
                 break;
             case "sqlserver":

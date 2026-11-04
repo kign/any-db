@@ -7,10 +7,11 @@ import java.io.IOException;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class CSVOutput extends FormattedOutput {
-    private static final Logger log = Logger.getLogger(CSVOutput.class.getName());
+    private static final Logger log = LogManager.getLogger(CSVOutput.class);
 
     private final CSVPrinter csvWriter;
     private final List<String> columns;

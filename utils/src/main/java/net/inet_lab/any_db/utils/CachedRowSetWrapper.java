@@ -333,6 +333,7 @@ public class CachedRowSetWrapper implements CachedRowSet,Serializable {
     }
 
     @Override
+    @Deprecated
     public BigDecimal getBigDecimal(int columnIndex, int scale) throws SQLException {
         lastColIndex = columnIndex;
         throw new RuntimeException("getBigDecimal(int columnIndex, int scale) not implemented");
@@ -369,6 +370,7 @@ public class CachedRowSetWrapper implements CachedRowSet,Serializable {
     }
 
     @Override
+    @Deprecated
     public InputStream getUnicodeStream(int columnIndex) throws SQLException {
         lastColIndex = columnIndex;
         throw new RuntimeException("getUnicodeStream(int columnIndex) not implemented");
@@ -1207,6 +1209,7 @@ public class CachedRowSetWrapper implements CachedRowSet,Serializable {
     }
 
     @Override
+    @Deprecated
     public BigDecimal getBigDecimal(String columnLabel, int scale) throws SQLException {
         throw new RuntimeException("getBigDecimal(String columnLabel, int scale) not implemented");
     }
@@ -1237,6 +1240,7 @@ public class CachedRowSetWrapper implements CachedRowSet,Serializable {
     }
 
     @Override
+    @Deprecated
     public InputStream getUnicodeStream(String columnLabel) throws SQLException {
         throw new RuntimeException("getUnicodeStream(String columnLabel) not implemented");
     }

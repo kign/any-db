@@ -6,23 +6,21 @@ import java.util.Iterator;
 import java.util.ArrayList;
 import java.io.PrintStream;
 
-import com.google.common.collect.ImmutableMap;
-
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class TabularOutput extends FormattedOutput {
-    private static final Map<String,String> ANSI_CODES = new ImmutableMap.Builder<String,String>()
-        .put("reset",  "\u001B[0m")
-        .put("black",  "\u001B[30m")
-        .put("red",    "\u001B[31m")
-        .put("green",  "\u001B[32m")
-        .put("yellow", "\u001B[33m")
-        .put("blue",   "\u001B[34m")
-        .put("purple", "\u001B[35m")
-        .put("cyan",   "\u001B[36m")
-        .put("white",  "\u001B[37m")
-        .build();
-    private static final Logger log = Logger.getLogger(TabularOutput.class.getName());
+    private static final Map<String,String> ANSI_CODES = Map.ofEntries(
+        Map.entry("reset",  "\u001B[0m"),
+        Map.entry("black",  "\u001B[30m"),
+        Map.entry("red",    "\u001B[31m"),
+        Map.entry("green",  "\u001B[32m"),
+        Map.entry("yellow", "\u001B[33m"),
+        Map.entry("blue",   "\u001B[34m"),
+        Map.entry("purple", "\u001B[35m"),
+        Map.entry("cyan",   "\u001B[36m"),
+        Map.entry("white",  "\u001B[37m"));
+    private static final Logger log = LogManager.getLogger(TabularOutput.class);
     private final List<Column> columns;
     private final List<List<String>> rows;
     private final int termWidth;

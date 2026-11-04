@@ -18,11 +18,14 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.Option;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.collections.IteratorUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.commons.io.input.BOMInputStream;
 
+import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.exceptions.CsvValidationException;
 
 import net.inet_lab.any_db.utils.DBConfig;
 import net.inet_lab.any_db.utils.ParsedArgsBaseDBAccess;
@@ -31,7 +34,7 @@ import net.inet_lab.any_db.utils.SQLConnection;
 import net.inet_lab.any_db.utils.AWSClient;
 
 public class LoadToDB {
-    private static final Logger log = Logger.getLogger(LoadToDB.class.getName());
+    private static final Logger log = LogManager.getLogger(LoadToDB.class);
 
     private static final Pattern VALID_ID = Pattern.compile("^[a-zA-Z_][a-zA-Z0-9_]*$");
     private static ParsedArgs args;
@@ -66,80 +69,81 @@ public class LoadToDB {
             final String USAGE="loadtodb.sh [options] [" + selector + "] <CSV file>";
             final int WIDTH = 120;
             final String default_format = "RFC4180";
+            @SuppressWarnings("deprecation") // the new org.apache.commons.cli.help.HelpFormatter changes --help layout
             HelpFormatter helper = new HelpFormatter();
             // https://commons.apache.org/proper/commons-cli/apidocs/index.html
             Options options = (new Options())
                     .addOption(Option.builder()
                             .longOpt("help")
                             .desc("Print this help")
-                            .build())
+                            .get())
                     .addOption(Option.builder()
                             .longOpt("header")
                             .hasArg().argName("YES|NO")
                             .desc("YES if file has header, NO otherwise (autodetected if not specified)")
-                            .build())
+                            .get())
                     .addOption(Option.builder("h")
                             .hasArg().argName("HOST")
                             .longOpt("host")
                             .desc("host name")
-                            .build())
+                            .get())
                     .addOption(Option.builder("p")
                             .hasArg().argName("PORT")
                             .longOpt("port")
                             .desc("port number")
-                            .build())
+                            .get())
                     .addOption(Option.builder("d")
                             .hasArg().argName("database")
                             .longOpt("database")
                             .desc("name of database")
-                            .build())
+                            .get())
                     .addOption(Option.builder("U")
                             .hasArg().argName("USER")
                             .longOpt("user")
                             .desc("user name (default = " + loginUser + ")")
-                            .build())
+                            .get())
                     .addOption(Option.builder("t")
                             .hasArg().argName("TABLE")
                             .longOpt("target")
                             .desc("target table")
-                            .build())
+                            .get())
                     .addOption(Option.builder("s")
                             .hasArg().argName("SEPARATOR")
                             .longOpt("separator")
                             .desc("Indicate separator for the source file as ASCII code, tab=9, default=44 (comma)")
-                            .build())
+                            .get())
                     .addOption(Option.builder()
                             .hasArg().argName("NULL VALUE")
                             .longOpt("null")
                             .desc("NULL value (default = NULL)")
-                            .build())
+                            .get())
                     .addOption(Option.builder()
                             .longOpt("drop")
                             .desc("drop target table first")
-                            .build())
+                            .get())
                     .addOption(Option.builder()
                             .longOpt("append")
                             .desc("append to the target table (not trying to re-create)")
-                            .build())
+                            .get())
                     .addOption(Option.builder()
                             .hasArg().argName("SPEC")
                             .longOpt("spec")
                             .desc("columnName1 columnType1, columnName2 columnType2,... ")
-                            .build())
+                            .get())
                     .addOption(Option.builder()
                             .longOpt("autospec")
                             .desc("Generate table tafinition automatically and use it right away")
-                            .build())
+                            .get())
                     .addOption(Option.builder("f")
                             .hasArg().argName("CSV FORMAT")
                             .longOpt("format")
                             .desc("One of CSVFormat.Predefined formats or 'opencsv'; default = " + default_format)
-                            .build())
+                            .get())
                     .addOption(Option.builder()
                             .hasArg().argName("CONFIG")
                             .longOpt("default-config")
                             .desc("Default config if one not specified as argument")
-                            .build());
+                            .get());
 
             parsedCL = parseCL(options, commandLine);
 
@@ -225,11 +229,17 @@ public class LoadToDB {
         if (reader == null) {
             if (records.hasNext()) {
                 CSVRecord r = records.next();
-                row = (String[]) IteratorUtils.toArray(r.iterator(), String.class);
+                row = r.values();
             }
         }
-        else
-            row = reader.readNext();
+        else {
+            try {
+                row = reader.readNext();
+            }
+            catch (CsvValidationException e) {
+                throw new IOException("Invalid CSV at line " + (lineno[0] + 1), e);
+            }
+        }
 
         if (row != null)
             lineno[0] ++;
@@ -241,7 +251,7 @@ public class LoadToDB {
         try {
             //in = new FileReader(args.csvFileName);
             // excluding EF BB BF header
-            in = new InputStreamReader(new BOMInputStream(new FileInputStream(args.csvFileName)));
+            in = new InputStreamReader(BOMInputStream.builder().setInputStream(new FileInputStream(args.csvFileName)).get());
         }
         catch (FileNotFoundException err) {
             System.err.println(err);
@@ -254,7 +264,12 @@ public class LoadToDB {
 
         if (args.csvFormat == null)
         // last arg is quotechar, thus effectively disabling quotes unless CSV
-            reader = new CSVReader(in, (char)args.delimiter, (args.delimiter==(int)',')?'"' : (char)0);
+            reader = new CSVReaderBuilder(in)
+                    .withCSVParser(new CSVParserBuilder()
+                            .withSeparator((char)args.delimiter)
+                            .withQuoteChar((args.delimiter==(int)',')?'"' : (char)0)
+                            .build())
+                    .build();
         else
             records = args.csvFormat.parse(in).iterator();
 
@@ -337,7 +352,7 @@ public class LoadToDB {
                 System.out.println("Autogenerated spec: " + spec);
             }
             else
-                System.out.println("CVS file analyzed, you can upload it with\n" + "--spec \"" + defs + "\"");
+                System.out.println("CSV file analyzed, you can upload it with\n" + "--spec \"" + defs + "\"");
         }
 
         if (args.append || spec != null) {

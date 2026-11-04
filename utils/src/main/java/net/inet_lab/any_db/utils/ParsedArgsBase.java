@@ -5,12 +5,13 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import org.jline.terminal.TerminalBuilder;
 
 public abstract class ParsedArgsBase {
-    private static final Logger log = Logger.getLogger(ParsedArgsBase.class.getName());
+    private static final Logger log = LogManager.getLogger(ParsedArgsBase.class);
 
     protected CommandLine parsedCL;
     protected String restoreCL;
@@ -49,6 +50,8 @@ public abstract class ParsedArgsBase {
             try {
                 termWidth = TerminalBuilder.builder().build().getWidth();
                 log.debug("Console width = " + termWidth);
+                if (termWidth <= 0)   // e.g. output is not a terminal
+                    termWidth = 80;
             } catch (Exception e) {
                 log.warn("Can't determine terminal width: " + e);
                 termWidth = 80;

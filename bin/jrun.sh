@@ -12,7 +12,6 @@ function test_availability () {
 java_classes_alist=("jrun=JRun"
                     "jcol=JCol"
                     "loadtodb=LoadToDB"
-                    "loadrun=LoadRun"
 	 	            "sqli=SQLi"
                     "jdbc-server=SQLRemoteServer")
 

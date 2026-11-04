@@ -16,19 +16,41 @@ PATH=~/git/any-db/bin:$PATH
 (in order of usability, from more useful to less)
 
 Most commands have at least one required argument, which is a custom database name. 
-Configuration file `~/.any-db` maps these names to common database connection info, e.g.
+Configuration file `~/.any-db.yaml` maps these names to common database connection info, e.g.
 
-```
-pro : driver=mysql,host=111.111.111.111,user=john,database=clients
+```yaml
+connections:
+  pro:
+    driver: mysql          # optional, default = postgresql
+    host: 111.111.111.111  # required
+    port: 3306             # optional, default depends on driver
+    database: clients      # required
+    user: john             # optional, default = current user
+    ssl: true              # optional, default = false
 ```
 
 Valid drivers are in file `SQLConnector.java` . 
 
-Passwords are **not** saved in `~/.any-db`; for that, you can use `~/.pgpass` file already used by `psql`
+Driver `gcloud-mysql` connects to MySQL in Google Cloud SQL using IAM authentication
+(via [Cloud SQL socket factory](https://github.com/GoogleCloudPlatform/cloud-sql-jdbc-socket-factory)),
+so no password is needed. `host` is the instance connection name, `user` is the IAM account email truncated at `@`,
+and credentials are taken from Google Application Default Credentials
+(e.g. `gcloud auth application-default login --impersonate-service-account=sql-user@pro-mgr.iam.gserviceaccount.com`):
+
+```yaml
+connections:
+  pro-iam:
+    driver: gcloud-mysql
+    host: pro-mgr:us-east1:ign-ins
+    database: finances
+    user: sql-user
+```
+
+Passwords are **not** saved in `~/.any-db.yaml`; for that, you can use `~/.pgpass` file already used by `psql`
 (Just use same exact format for non-PostgreSQL databases); this has an advantage that you can use all the
 tools provided here _and_ `psql`-derived tools while keeping all passwords in one place.
 
-You can also bypass `~/.any-db` and use options `-h` (for host), `-d` (for database name),
+You can also bypass `~/.any-db.yaml` and use options `-h` (for host), `-d` (for database name),
 `-p` (for port) and `-U` (user name) to provided connection info. `~/.pgpass` is still used
 for passwords.
 
@@ -69,7 +91,7 @@ options:
  -M,--admin                         Assume sysadmin role (snowflake)
  -n,--dry-run                       Dry run mode (clusters should still be available)
     --no-rmi                        Inhibit RMI use (never execute in server process)
-    --nosub                         No paramater substitution
+    --nosub                         No parameter substitution
     --null <NULL VALUE>             NULL value (default = NULL)
  -O,--output <FILE>                 Output file name
  -p,--port <PORT>                   port number
@@ -77,7 +99,7 @@ options:
     --rmi                           Force RMI use (always execute in server process)
     --rs-type <RS_TYPE>             Testing only; can be 'default', 'wrapper' or 'cached'
     --single                        Treat whole file as one large query, don't attempt to split
- -t,--no-headers                    Skip header row when writing to CVS file
+ -t,--no-headers                    Skip header row when writing to CSV file
  -U,--user <USER>                   user name (default = current user)
  -u,--update                        Run as an 'update' query
     --unescaped                     No escaping in CSV file generation; might not open in Excel correctly, but better for line by line comparison
@@ -93,10 +115,6 @@ tables with `-m` option.
 
 Prints one or more (as long as they fit on your terminal) rows from the table in transposed format;
 useful to study one such record in detail. Note that `sqli.sh` also has similar `\col` command.
-
-### loadrun.sh
-
-Run the query and save results to a table (new table tor append to existing one)
 
 ### loadtodb.sh
 

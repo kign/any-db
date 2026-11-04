@@ -13,7 +13,8 @@ import java.sql.ResultSetMetaData;
 import java.util.Properties;
 
 import net.inet_lab.any_db.utils.*;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.HelpFormatter;
@@ -21,7 +22,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 
 public class JCol {
     private static final String JDBC_REDSHIFT_DRIVER = "com.amazon.redshift.jdbc41.Driver";
-    private static final Logger log = Logger.getLogger(JCol.class.getName());
+    private static final Logger log = LogManager.getLogger(JCol.class);
 
     static class ParsedArgs extends ParsedArgsBaseDBAccess {
         final String loginUser = System.getenv().get("USER");
@@ -56,6 +57,7 @@ public class JCol {
             }
             final String USAGE="jcol.sh [options] [" + selector + "] <table> [<filter|column_name val1 val2 val3.... valN>]";
 
+            @SuppressWarnings("deprecation") // the new org.apache.commons.cli.help.HelpFormatter changes --help layout
             HelpFormatter helper = new HelpFormatter();
             String defaultDriver = "redshift";
 
@@ -64,74 +66,74 @@ public class JCol {
                     .addOption(Option.builder()
                             .longOpt("help")
                             .desc("Print this help")
-                            .build())
+                            .get())
                     .addOption(Option.builder("h")
                             .hasArg().argName("HOST")
                             .longOpt("host")
                             .desc("host name")
-                            .build())
+                            .get())
                     .addOption(Option.builder("p")
                             .hasArg().argName("PORT")
                             .longOpt("port")
                             .desc("port number")
-                            .build())
+                            .get())
                     .addOption(Option.builder("d")
                             .hasArg().argName("database")
                             .longOpt("database")
                             .desc("name of database")
-                            .build())
+                            .get())
                     .addOption(Option.builder("U")
                             .hasArg().argName("USER")
                             .longOpt("user")
                             .desc("user name (default = " + loginUser + "), could be overriden by config")
-                            .build())
+                            .get())
                     .addOption(Option.builder()
                             .hasArg().argName("DRIVER")
                             .longOpt("driver")
                             .desc("JDBC driver to use (default = " + defaultDriver + ")")
-                            .build())
+                            .get())
                     .addOption(Option.builder("O")
                             .hasArg().argName("FILE")
                             .longOpt("output")
                             .desc("Output file name")
-                            .build())
+                            .get())
                     .addOption(Option.builder()
                             .hasArg().argName("NULL VALUE")
                             .longOpt("null")
                             .desc("NULL value (default = NULL)")
-                            .build())
+                            .get())
                     .addOption(Option.builder("l")
                             .hasArg().argName("LIMIT")
                             .longOpt("limit")
                             .desc("max number of rows to use (default = " + defaultLimit + ")")
-                            .build())
+                            .get())
                     .addOption(Option.builder("q")
                             .hasArg().argName("QUERY_GROUP")
                             .longOpt("query_group")
                             .desc("Query group")
-                            .build())
+                            .get())
                     .addOption(Option.builder("w")
                             .hasArg().argName("WIDTH")
                             .longOpt("width")
                             .desc("max column width (by default filling avaible terminal width)")
-                            .build())
+                            .get())
                     .addOption(Option.builder("M")
                             .longOpt("admin")
                             .desc("Assume sysadmin role (snowflake)")
-                            .build())
+                            .get())
                     .addOption(Option.builder()
                             .hasArg().argName("CONFIG")
                             .longOpt("default-config")
                             .desc("Default config if one not specified as argument")
-                            .build())
+                            .get())
                     .addOption(Option.builder()
                             .longOpt("rmi")
                             .desc("Force RMI use (always execute in server process)")
-                            .build())
+                            .get())
                     .addOption(Option.builder()
                             .longOpt("no-rmi")
                             .desc("Inhibit RMI use (never execute in server process)")
-                            .build());
+                            .get());
 
 
             parsedCL = parseCL(options, commandLine);

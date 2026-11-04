@@ -1,6 +1,7 @@
 package net.inet_lab.any_db.utils;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.PrintStream;
@@ -12,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class TransposedListing {
-    private static final Logger log = Logger.getLogger(TransposedListing.class.getName());
+    private static final Logger log = LogManager.getLogger(TransposedListing.class);
 
     public static void run(ResultSet res,
                     String nullString,

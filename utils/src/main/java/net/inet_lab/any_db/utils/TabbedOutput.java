@@ -5,12 +5,13 @@ import java.util.ArrayList;
 import java.io.IOException;
 import java.io.PrintStream;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import net.inet_lab.any_db.utils.FormattedOutput;
 
 public class TabbedOutput extends FormattedOutput {
-    private static final Logger log = Logger.getLogger(TabbedOutput.class.getName());
+    private static final Logger log = LogManager.getLogger(TabbedOutput.class);
 
     private final List<String> columns;
     private boolean doneWithHeader;

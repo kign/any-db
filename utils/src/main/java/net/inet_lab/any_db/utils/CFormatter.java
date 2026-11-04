@@ -21,8 +21,8 @@ public abstract class CFormatter {
             if (itype == Types.VARCHAR            ||
                 itype == 1    /* bpchar*/         ||
                 itype == -1   /* mysql varchar */ ||
-                itype == -16  /* presto VACHAR */ ||
-                itype == 2000 /* presto MAP(VACHAR,VACHAR) */ ||
+                itype == -16  /* presto/trino VARCHAR */ ||
+                itype == 2000 /* presto/trino MAP(VARCHAR,VARCHAR) */ ||
                 itype == 1111 /* postgres JSON */ ||
                 itype == 2005 /* ntext @ ms-sql */)
                 res = new CFormatterString ();

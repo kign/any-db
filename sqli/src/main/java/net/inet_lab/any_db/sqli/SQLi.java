@@ -15,7 +15,8 @@ import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.HelpFormatter;
@@ -39,7 +40,7 @@ import static net.inet_lab.any_db.utils.Misc.*;
 
 
 class SQLi {
-    private static final Logger log = Logger.getLogger(SQLi.class.getName());
+    private static final Logger log = LogManager.getLogger(SQLi.class);
 
     static class ParsedArgs extends ParsedArgsBaseDBAccess {
         final String loginUser = System.getenv().get("USER");
@@ -64,6 +65,7 @@ class SQLi {
             }
             final String USAGE = "sqli.sh [options] [" + selector + "]";
 
+            @SuppressWarnings("deprecation") // the new org.apache.commons.cli.help.HelpFormatter changes --help layout
             HelpFormatter helper = new HelpFormatter();
 
             // https://commons.apache.org/proper/commons-cli/apidocs/index.html
@@ -71,46 +73,46 @@ class SQLi {
                     .addOption(Option.builder()
                             .longOpt("help")
                             .desc("Print this help")
-                            .build())
+                            .get())
                     .addOption(Option.builder("h")
                             .hasArg().argName("HOST")
                             .longOpt("host")
                             .desc("host name")
-                            .build())
+                            .get())
                     .addOption(Option.builder("p")
                             .hasArg().argName("PORT")
                             .longOpt("port")
                             .desc("port number")
-                            .build())
+                            .get())
                     .addOption(Option.builder("d")
                             .hasArg().argName("database")
                             .longOpt("database")
                             .desc("name of database")
-                            .build())
+                            .get())
                     .addOption(Option.builder("U")
                             .hasArg().argName("USER")
                             .longOpt("user")
                             .desc("user name (default = current user, " + loginUser + ")")
-                            .build())
+                            .get())
                     .addOption(Option.builder()
                             .hasArg().argName("DRIVER")
                             .longOpt("driver")
                             .desc("JDBC driver to use")
-                            .build())
+                            .get())
                     .addOption(Option.builder("q")
                             .hasArg().argName("QUERY_GROUP")
                             .longOpt("query_group")
                             .desc("Query group")
-                            .build())
+                            .get())
                     .addOption(Option.builder("M")
                             .longOpt("admin")
                             .desc("Assume sysadmin role (snowflake)")
-                            .build())
+                            .get())
                     .addOption(Option.builder()
                             .hasArg().argName("CONFIG")
                             .longOpt("default-config")
                             .desc("Default config if one not specified as argument")
-                            .build());
+                            .get());
 
             parsedCL = parseCL(options, commandLine);
 

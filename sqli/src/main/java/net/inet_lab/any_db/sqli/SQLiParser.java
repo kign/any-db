@@ -1,12 +1,13 @@
 package net.inet_lab.any_db.sqli;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jline.reader.EOFError;
 import org.jline.reader.ParsedLine;
 import org.jline.reader.impl.DefaultParser;
 
 class SQLiParser extends DefaultParser {
-    private static final Logger log = Logger.getLogger(SQLiParser.class.getName());
+    private static final Logger log = LogManager.getLogger(SQLiParser.class);
 
     SQLiParser() {
         super();

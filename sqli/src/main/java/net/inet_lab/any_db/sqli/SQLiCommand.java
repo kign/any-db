@@ -16,14 +16,15 @@ import net.inet_lab.any_db.utils.FormattedOutput;
 import net.inet_lab.any_db.utils.SQLConnector;
 import net.inet_lab.any_db.utils.TransposedListing;
 import org.apache.commons.lang3.exception.ExceptionUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import org.jline.terminal.Terminal;
 
 import static net.inet_lab.any_db.utils.Misc.*;
 
 public class SQLiCommand {
-    private static final Logger log = Logger.getLogger(SQLi.class.getName());
+    private static final Logger log = LogManager.getLogger(SQLi.class);
     private final SQLConnection conn;
     private final SQLDict dict;
     private final SQLiContext ctx;
@@ -224,7 +225,7 @@ public class SQLiCommand {
                     def = sb.toString();
                 }
             }
-            else if ("presto".equals(driver) ||
+            else if ("trino".equals(driver) ||
                     "mysql".equals(driver)) {
                 ResultSet res = conn.select("show create table " + tname, SQLConnector.SQLPRN_LOG);
                 Map<String, Integer> idx = SQLDict.getIndeces(res, "create*");

@@ -17,12 +17,13 @@ import org.apache.poi.ss.usermodel.HorizontalAlignment;
 
 //import org.apache.poi.ss.usermodel.CellType;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import net.inet_lab.any_db.utils.FormattedOutput;
 
 public class ExcelOutput extends FormattedOutput {
-    private static final Logger log = Logger.getLogger(ExcelOutput.class.getName());
+    private static final Logger log = LogManager.getLogger(ExcelOutput.class);
     private boolean doneWithHeader;
     private final FileOutputStream fileStream;
     private final List<Column> columns;
@@ -48,7 +49,7 @@ public class ExcelOutput extends FormattedOutput {
 
             dataFormat = workbook.createDataFormat();
             cellStyle = workbook.createCellStyle();
-            cellStyle.setAlignment(leftAlign? CellStyle.ALIGN_LEFT : CellStyle.ALIGN_RIGHT);
+            cellStyle.setAlignment(leftAlign? HorizontalAlignment.LEFT : HorizontalAlignment.RIGHT);
             if (formatPattern != null) {
                 cellStyle.setDataFormat(dataFormat.getFormat(formatPattern));
             }
@@ -71,7 +72,6 @@ public class ExcelOutput extends FormattedOutput {
         PrintSetup printSetup = sheet.getPrintSetup();
         printSetup.setLandscape(true);
 
-        // Not available in 3.10, probably in 3.14
         // sheet.addIgnoredErrors(.....);
     }
 

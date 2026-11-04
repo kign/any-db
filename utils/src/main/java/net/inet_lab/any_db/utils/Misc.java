@@ -88,7 +88,7 @@ public class Misc {
             proc.getOutputStream().write(input.getBytes());
             proc.getOutputStream().flush();
             proc.getOutputStream().close();
-            String output = IOUtils.toString(proc.getInputStream());
+            String output = IOUtils.toString(proc.getInputStream(), java.nio.charset.Charset.defaultCharset());
             proc.waitFor();
             return output;
         } catch (java.io.IOException | InterruptedException ex) {
