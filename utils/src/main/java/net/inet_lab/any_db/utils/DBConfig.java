@@ -5,10 +5,14 @@ import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
@@ -55,7 +59,9 @@ public class DBConfig {
     static private final String CONFIG_FILE = ".any-db.yaml";
     static private final String LEGACY_CONFIG_FILE = ".any-db";
     static private final List<String> CONNECTION_KEYS =
-            List.of("driver", "host", "port", "database", "user", "ssl", "sslfactory");
+            List.of("driver", "host", "port", "database", "user", "ssl", "sslfactory", "alias", "enabled");
+    static private final Set<String> TRUE_VALUES = Set.of("true", "yes", "on", "y", "1");
+    static private final Set<String> FALSE_VALUES = Set.of("false", "no", "off", "n", "0");
 
     // LinkedHashMap: connections are listed in the order they appear in the config file
     static final private Map<String,DBConfig> knownConfigs = new LinkedHashMap<>();
@@ -84,6 +90,8 @@ public class DBConfig {
      *     user: john             # optional
      *     ssl: true              # optional, default = false
      *     sslfactory: ...        # optional
+     *     alias: pr, pro2        # optional, other names for the same connection (comma-separated or a list)
+     *     enabled: false         # optional, default = true; disabled connections (and their aliases) are ignored
      */
     private static void loadConfigFile(Path configFile) {
         Object root;
@@ -110,11 +118,18 @@ public class DBConfig {
         if (!(connections instanceof Map))
             throw configError(configFile, null, "\"connections\" must be a mapping of connection names to their properties");
 
+        // name or alias -> connection that defined it, to detect conflicts
+        Map<String,String> definedBy = new HashMap<>();
+
         for (Map.Entry<?,?> entry : ((Map<?,?>) connections).entrySet()) {
             String name = String.valueOf(entry.getKey());
             if (!(entry.getValue() instanceof Map))
                 throw configError(configFile, name, "must be a mapping of properties " + CONNECTION_KEYS);
             Map<?,?> props = (Map<?,?>) entry.getValue();
+
+            if (!getBoolean(configFile, name, props, "enabled", true))
+                continue;
+
             for (Object key : props.keySet())
                 if (!CONNECTION_KEYS.contains(key))
                     throw configError(configFile, name, "unknown property \"" + key + "\", valid properties are " + CONNECTION_KEYS);
@@ -133,13 +148,59 @@ public class DBConfig {
             if (port != null && !(port instanceof Integer))
                 throw configError(configFile, name, "port must be an integer");
 
-            Object ssl = props.get("ssl");
-            if (ssl != null && !(ssl instanceof Boolean))
-                throw configError(configFile, name, "ssl must be true or false");
+            boolean ssl = getBoolean(configFile, name, props, "ssl", false);
 
-            knownConfigs.put(name, new DBConfig((driver == null)? "postgresql" : driver,
-                    host, (Integer) port, database, Boolean.TRUE.equals(ssl), sslfactory, user));
+            DBConfig config = new DBConfig((driver == null)? "postgresql" : driver,
+                    host, (Integer) port, database, ssl, sslfactory, user);
+
+            List<String> names = new ArrayList<>();
+            names.add(name);
+            names.addAll(getAliases(configFile, name, props));
+            for (String n : names) {
+                String other = definedBy.putIfAbsent(n, name);
+                if (other != null)
+                    throw configError(configFile, name, "\"" + n + "\" is already defined " +
+                            (other.equals(n)? "as a connection" : "as an alias of connection \"" + other + "\""));
+                knownConfigs.put(n, config);
+            }
         }
+    }
+
+    private static List<String> getAliases(Path configFile, String name, Map<?,?> props) {
+        Object value = props.get("alias");
+        List<?> items;
+        if (value == null)
+            return List.of();
+        else if (value instanceof String)
+            items = Arrays.asList(((String) value).split(","));
+        else if (value instanceof List)
+            items = (List<?>) value;
+        else
+            throw configError(configFile, name, "alias must be a comma-separated string or a list of names");
+
+        List<String> aliases = new ArrayList<>();
+        for (Object item : items) {
+            String alias = (item == null)? "" : String.valueOf(item).trim();
+            if (alias.isEmpty())
+                throw configError(configFile, name, "alias contains an empty name");
+            aliases.add(alias);
+        }
+        return aliases;
+    }
+
+    // Unquoted yes/no/on/off are already booleans in YAML 1.1; also accept quoted values and y/n, 1/0
+    private static boolean getBoolean(Path configFile, String name, Map<?,?> props, String key, boolean deflt) {
+        Object value = props.get(key);
+        if (value == null)
+            return deflt;
+        if (value instanceof Boolean)
+            return (Boolean) value;
+        String s = String.valueOf(value).trim().toLowerCase();
+        if (TRUE_VALUES.contains(s))
+            return true;
+        if (FALSE_VALUES.contains(s))
+            return false;
+        throw configError(configFile, name, key + " must be true or false (or yes/no, on/off)");
     }
 
     private static String getString(Path configFile, String name, Map<?,?> props, String key) {

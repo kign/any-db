@@ -7,7 +7,12 @@
         "fmtopt",
         "frst",
         "iCol",
+        "jrun",
+        "loadtodb",
         "normi",
-        "opencsv"
+        "nosub",
+        "opencsv",
+        "sqli",
+        "trino"
     ]
 }

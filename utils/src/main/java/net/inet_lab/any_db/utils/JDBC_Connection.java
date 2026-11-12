@@ -1,6 +1,8 @@
 package net.inet_lab.any_db.utils;
 
 import java.util.Properties;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 import java.sql.Connection;
 import java.sql.Statement;
@@ -88,7 +90,10 @@ public class JDBC_Connection implements JConnection {
             case SQLConnector.GCLOUD_MYSQL:
                 // https://github.com/GoogleCloudPlatform/cloud-sql-jdbc-socket-factory/blob/main/docs/jdbc.md
                 // host is the instance connection name "project:region:instance"; credentials are
-                // Google Application Default Credentials, and user is the IAM email truncated at '@'
+                // Google Application Default Credentials.
+                // user is either the IAM DB user name (IAM email truncated at '@'), which must match
+                // the ADC identity, or the full service account email, which is then impersonated
+                // using ADC (requires roles/iam.serviceAccountTokenCreator on that service account)
                 supportsCached = true;
                 x_jdbcURL = "jdbc:mysql:///" + database +
                         "?socketFactory=com.google.cloud.sql.mysql.SocketFactory" +
@@ -98,6 +103,10 @@ public class JDBC_Connection implements JConnection {
                         "&cloudSqlAdminQuotaProject=" + host.split(":")[0] +
                         // socket factory already provides TLS
                         "&sslMode=DISABLED";
+                if (user != null && user.contains("@")) {
+                    x_jdbcURL += "&cloudSqlTargetPrincipal=" + URLEncoder.encode(user, StandardCharsets.UTF_8);
+                    user = user.substring(0, user.indexOf('@'));
+                }
                 // ignored with IAM auth, but the driver rejects an empty password
                 if (pass == null)
                     pass = "iam-auth";

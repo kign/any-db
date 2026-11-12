@@ -1,6 +1,6 @@
 # Java utilities to work with relational databases in database-agnostic way
 
-Not all utilities are equally usedful or equally universal (some were written for a rather narrow task),
+Not all utilities are equally useful or equally universal (some were written for a rather narrow task),
 but we preserve them here nevertheless as a reference to work respective databases.
 
 ## Installation
@@ -20,30 +20,38 @@ Configuration file `~/.any-db.yaml` maps these names to common database connecti
 
 ```yaml
 connections:
-  pro:
+  foo:
     driver: mysql          # optional, default = postgresql
     host: 111.111.111.111  # required
     port: 3306             # optional, default depends on driver
     database: clients      # required
     user: john             # optional, default = current user
     ssl: true              # optional, default = false
+    alias: clients, cl     # optional, other names for the same connection (comma-separated)
+    enabled: false         # optional, default = true; disabled connection (and its aliases) is ignored
 ```
 
 Valid drivers are in file `SQLConnector.java` . 
 
 Driver `gcloud-mysql` connects to MySQL in Google Cloud SQL using IAM authentication
 (via [Cloud SQL socket factory](https://github.com/GoogleCloudPlatform/cloud-sql-jdbc-socket-factory)),
-so no password is needed. `host` is the instance connection name, `user` is the IAM account email truncated at `@`,
-and credentials are taken from Google Application Default Credentials
-(e.g. `gcloud auth application-default login --impersonate-service-account=sql-user@pro-mgr.iam.gserviceaccount.com`):
+so no password is needed. `host` is the instance connection name, and credentials are taken from
+Google Application Default Credentials (ADC), normally your own account (`gcloud auth application-default login`).
+
+`user` is either
+- a full service account email: it is impersonated using ADC, and part before `@` is used as MySQL user
+  (requires `roles/iam.serviceAccountTokenCreator` on that service account), or
+- a MySQL user name only (IAM email truncated at `@`): the identity in ADC itself must match that user.
+
+See [docs/gcloud_mysql.md](docs/gcloud_mysql.md) for step-by-step setup of a new service account and connection.
 
 ```yaml
 connections:
-  pro-iam:
+  foo:
     driver: gcloud-mysql
-    host: pro-mgr:us-east1:ign-ins
+    host: PROJECT:us-east1:SQL_INSTANCE
     database: finances
-    user: sql-user
+    user: sql-user@pPROJECT.iam.gserviceaccount.com
 ```
 
 Passwords are **not** saved in `~/.any-db.yaml`; for that, you can use `~/.pgpass` file already used by `psql`
